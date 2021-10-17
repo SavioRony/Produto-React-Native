@@ -1,22 +1,62 @@
-import { getActionFromState } from "@react-navigation/core";
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { View, Text, FlatList, Alert } from 'react-native'
 import { Button, Icon, ListItem } from "react-native-elements";
-import ProdutoContext from "../context/ProdutoContext"
+
+async function getProdutos(jsonState) {
+    await fetch('https://produtos-apirest.herokuapp.com/api/produtos')
+        .then(response => {
+            if (response.status === 200) {
+                response.json().then(function (result) {
+                    console.log(result);
+                    jsonState(result)
+                });
+            } else {
+                throw new Error('Erro ao consumir a API!');
+            }
+        })
+        .then(response => {
+            console.debug(response);
+        }).catch(error => {
+            console.error(error);
+        });
+}
+
+async function deleteProduto(produto, jsonState) {
+    await fetch(
+        'https://produtos-apirest.herokuapp.com/api/produto',
+        {
+            method: 'DELETE',
+            headers:
+            {
+                Accept: 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(produto)
+        })
+        .then(response => {
+            if (response.status === 200) {
+                getProdutos(jsonState)
+            } else {
+                throw new Error('Erro ao consumir a API!');
+            }
+        })
+        .then(response => {
+            console.debug(response);
+        }).catch(error => {
+            console.error(error);
+        });
+}
 
 export default props => {
-
-    const { state, dispatch } = useContext(ProdutoContext)
+    const [produtos, setProdutos] = useState([])
+    //getProdutos(setProdutos)
 
     function confirmUserDeletion(produto) {
-        Alert.alert('Excluir Produto', 'Deseja excluir o produto ' + produto.nome + '?', [
+        Alert.alert('Excluir Produto', 'Deseja excluir o produto?', [
             {
                 text: 'Sim',
                 onPress() {
-                    dispatch({
-                        type: 'deleteProduto',
-                        payload: produto,
-                    })
+                    deleteProduto(produto, setProdutos)
                 }
             },
             {
@@ -59,7 +99,7 @@ export default props => {
         <View>
             <FlatList
                 keyExtractor={produto => produto.id.toString()}
-                data={state.produtos}
+                data={produtos}
                 renderItem={getProdutoItem}
             />
         </View>
