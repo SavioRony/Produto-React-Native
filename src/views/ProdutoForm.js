@@ -1,10 +1,60 @@
 import React, { useState, useContext } from "react";
 import { Text, TextInput, View, StyleSheet, Button } from 'react-native'
-import ProdutoContext from "../context/ProdutoContext";
+
+async function updateProduto(produto) {
+    await fetch(
+        'https://produtos-apirest.herokuapp.com/api/produto',
+        {
+            method: 'PUT',
+            headers:
+            {
+                Accept: 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(produto)
+        })
+        .then(response => {
+            if (response.status === 200) {
+                console.log('Alterado com sucesso')
+            } else {
+                throw new Error('Erro ao consumir a API!');
+            }
+        })
+        .then(response => {
+            console.debug(response);
+        }).catch(error => {
+            console.error(error);
+        });
+}
+
+async function saveProduto(produto) {
+    await fetch(
+        'https://produtos-apirest.herokuapp.com/api/produto',
+        {
+            method: 'POST',
+            headers:
+            {
+                Accept: 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(produto)
+        })
+        .then(response => {
+            if (response.status === 200) {
+                console.log('Salvo com sucesso')
+            } else {
+                throw new Error('Erro ao consumir a API!');
+            }
+        })
+        .then(response => {
+            console.debug(response);
+        }).catch(error => {
+            console.error(error);
+        });
+}
 
 export default ({ route, navigation }) => {
     const [produto, setProduto] = useState(route.params ? route.params : {})
-    const { dispatch } = useContext(ProdutoContext)
     return (
         <View style={style.form}>
             <Text>Nome</Text>
@@ -33,10 +83,7 @@ export default ({ route, navigation }) => {
             <Button
                 title="Salvar"
                 onPress={() => {
-                    dispatch({
-                        type: produto.id ? 'updateProduto' : 'createProduto',
-                        payload: produto,
-                    })
+                    produto.id ? updateProduto(produto) : saveProduto(produto)
                     navigation.goBack()
                 }}
             />
